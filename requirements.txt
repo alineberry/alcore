@@ -1,0 +1,16 @@
+# THIRD PARTY REQUIREMENTS
+numpy
+sqlalchemy
+pandas
+matplotlib
+seaborn
+# TEST
+nose
+coverage
+# LINT OR DIE
+flake8
+pep8
+pyflakes
+# DOCUMENTATION
+sphinx
+sphinx_rtd_theme
