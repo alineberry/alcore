@@ -6,6 +6,9 @@ from multiprocessing import Pool, cpu_count
 from subprocess import check_output
 import datetime
 
+def stretch_notebook():
+    from IPython.core.display import display
+    display(HTML("<style>.container { width:80% !important; }</style>")) 
 
 def parallelize_df(df, func):
     """
@@ -76,3 +79,14 @@ def remove_colname_prefix(df, sep='.'):
             new_cols.append(col)
     df.columns = new_cols
     return df
+
+def single_line_percent_complete(total, completed, message=None):
+    sys.stdout.write('\r')
+    if message <> None:
+        sys.stdout.write(
+            "[%-50s] %0.2f%% %d / %d - %s " % (
+            '=' * int(completed * 50 / total), float(completed) * float(100) / float(total), completed, total, message))
+    else:
+        sys.stdout.write(
+            "[%-50s] %0.2f%% %d / %d " % ('=' * int(completed * 50 / total), float(completed) * float(100) / float(total), completed, total))
+    sys.stdout.flush() 
