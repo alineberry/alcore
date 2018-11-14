@@ -4,10 +4,7 @@ setup(
     name='alcore',
     version='0.0.0',
     author='Adam Lineberry',
-    author_email='ablinebe@bechtel.com',
+    author_email='ablineberry@gmail.com',
     packages=find_packages(),
-    description='Adam Lineberry general purpose module',
-    #url='https://tfs.becpsn.com/tfs/ISnT/BDAC/_git/DataScienceCore',
-    #keywords=['data', 'science'],
-    #classifiers=[],
+    description='Adam Lineberry general purpose module'
 )
