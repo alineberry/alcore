@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class FCLayer(nn.Module):
@@ -74,3 +75,41 @@ def embedding(ni, nf):
     with torch.no_grad(): trunc_normal_(emb.weight, std=0.01)
     return emb
 
+
+class VarLenLSTM(nn.Module):
+    """A generic LSTM module which efficiently handles batches of variable length (ie padded) sequences using
+    packing and unpacking
+    """
+    def __init__(self, input_size, hidden_size, num_layers=1):
+        """
+        Args:
+            input_size (int): Dimensionality of LSTM input vector
+            hidden_size (int): Dimensionality of LSTM hidden state and cell state
+        """
+        super().__init__()
+        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, batch_first=True, num_layers=num_layers)
+
+    def forward(self, x, x_lens, h_0, c_0):
+        """
+        Most of the code here handles the packing and unpacking that's required to efficiently
+        perform LSTM calculations for variable length sequences.
+        Args:
+            x: Distributed input tensors, ready for direct input to LSTM
+            x_lens: Sequence lengths of examples in the batch
+            h_0: Tensor to initialize LSTM hidden state
+            c_0: Tensor to initialize LSTM cell state
+        Returns:
+            out_padded, (h_n, c_n)
+            It returns the same as the underlying PyTorch LSTM; see PyTorch docs.
+        """
+        max_seq_len = x.size(1)
+        sorted_lens, idx = x_lens.sort(dim=0, descending=True)
+        x_sorted = x[idx]
+        x_packed = pack_padded_sequence(x_sorted, lengths=sorted_lens, batch_first=True)
+        out_packed, (h_n, c_n) = self.lstm(x_packed, (h_0, c_0))
+        out_padded, _ = pad_packed_sequence(out_packed, batch_first=True, total_length=max_seq_len)
+        _, reverse_idx = idx.sort(dim=0, descending=False)
+        out_padded = out_padded[reverse_idx]
+        h_n = h_n[:, reverse_idx]
+        c_n = c_n[:, reverse_idx]
+        return out_padded, (h_n, c_n)
